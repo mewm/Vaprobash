@@ -9,7 +9,7 @@ github_url      = "https://raw.githubusercontent.com/#{github_username}/#{github
 
 # Server Configuration
 
-hostname        = "vaprobash.dev"
+hostname        = "miinto2.lcl"
 
 # Set a local private network IP address.
 # See http://en.wikipedia.org/wiki/Private_network for explanation
@@ -19,14 +19,14 @@ hostname        = "vaprobash.dev"
 #   192.168.0.1 - 192.168.255.254
 server_ip             = "192.168.22.10"
 server_cpus           = "1"   # Cores
-server_memory         = "384" # MB
-server_swap           = "768" # Options: false | int (MB) - Guideline: Between one or two times the server_memory
+server_memory         = "512" # MB
+server_swap           = "1024" # Options: false | int (MB) - Guideline: Between one or two times the server_memory
 
 # UTC        for Universal Coordinated Time
 # EST        for Eastern Standard Time
 # US/Central for American Central
 # US/Eastern for American Eastern
-server_timezone  = "UTC"
+server_timezone  = "EST"
 
 # Database Configuration
 mysql_root_password   = "root"   # We'll assume user "root"
@@ -36,8 +36,8 @@ pgsql_root_password   = "root"   # We'll assume user "root"
 mongo_enable_remote   = "false"  # remote access enabled when true
 
 # Languages and Packages
-php_timezone          = "UTC"    # http://php.net/manual/en/timezones.php
-php_version           = "5.6"    # Options: 5.5 | 5.6
+php_timezone          = "EST"    # http://php.net/manual/en/timezones.php
+php_version           = "5.4"    # Options: 5.5 | 5.6
 ruby_version          = "latest" # Choose what ruby version should be installed (will also be the default version)
 ruby_gems             = [        # List any Ruby Gems that you want to install
   #"jekyll",
@@ -79,7 +79,7 @@ sphinxsearch_version  = "rel22" # rel20, rel21, rel22, beta, daily, stable
 Vagrant.configure("2") do |config|
 
   # Set server to Ubuntu 14.04
-  config.vm.box = "ubuntu/trusty64"
+  config.vm.box = "parallels/ubuntu-14.04"
 
   config.vm.define "Vaprobash" do |vapro|
   end
@@ -100,7 +100,7 @@ Vagrant.configure("2") do |config|
   config.vm.network :private_network, ip: server_ip
 
   # Use NFS for the shared folder
-  config.vm.synced_folder ".", "/vagrant",
+  config.vm.synced_folder "./../miinto_com", "/vagrant",
             id: "core",
             :nfs => true,
             :mount_options => ['nolock,vers=3,udp,noatime']
@@ -134,6 +134,16 @@ Vagrant.configure("2") do |config|
     # Set server memory
     vb.vmx["memsize"] = server_memory
 
+  end
+  
+  config.vm.provider "parallels" do |v|
+    v.name = "my_vm"
+    
+    
+      v.update_guest_tools = true
+        v.optimize_power_consumption = false
+         v.memory = 1024
+          v.cpus = 2
   end
 
   # If using Vagrant-Cachier
@@ -176,7 +186,7 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", path: "#{github_url}/scripts/php.sh", args: [php_timezone, hhvm, php_version]
 
   # Enable MSSQL for PHP
-  # config.vm.provision "shell", path: "#{github_url}/scripts/mssql.sh"
+  config.vm.provision "shell", path: "#{github_url}/scripts/mssql.sh"
 
   # Provision Vim
   # config.vm.provision "shell", path: "#{github_url}/scripts/vim.sh", args: github_url
@@ -190,7 +200,7 @@ Vagrant.configure("2") do |config|
   ##########
 
   # Provision Apache Base
-  # config.vm.provision "shell", path: "#{github_url}/scripts/apache.sh", args: [server_ip, public_folder, hostname, github_url]
+  config.vm.provision "shell", path: "#{github_url}/scripts/apache.sh", args: [server_ip, public_folder, hostname, github_url]
 
   # Provision Nginx Base
   # config.vm.provision "shell", path: "#{github_url}/scripts/nginx.sh", args: [server_ip, public_folder, hostname, github_url]
@@ -249,7 +259,7 @@ Vagrant.configure("2") do |config|
   ##########
 
   # Install Memcached
-  # config.vm.provision "shell", path: "#{github_url}/scripts/memcached.sh"
+  config.vm.provision "shell", path: "#{github_url}/scripts/memcached.sh"
 
   # Provision Redis (without journaling and persistence)
   # config.vm.provision "shell", path: "#{github_url}/scripts/redis.sh"
@@ -280,7 +290,7 @@ Vagrant.configure("2") do |config|
   ##########
 
   # Install Nodejs
-  # config.vm.provision "shell", path: "#{github_url}/scripts/nodejs.sh", privileged: false, args: nodejs_packages.unshift(nodejs_version, github_url)
+  config.vm.provision "shell", path: "#{github_url}/scripts/nodejs.sh", privileged: false, args: nodejs_packages.unshift(nodejs_version, github_url)
 
   # Install Ruby Version Manager (RVM)
   # config.vm.provision "shell", path: "#{github_url}/scripts/rvm.sh", privileged: false, args: ruby_gems.unshift(ruby_version)
@@ -290,7 +300,7 @@ Vagrant.configure("2") do |config|
   ##########
 
   # Provision Composer
-  # config.vm.provision "shell", path: "#{github_url}/scripts/composer.sh", privileged: false, args: composer_packages.join(" ")
+  config.vm.provision "shell", path: "#{github_url}/scripts/composer.sh", privileged: false, args: composer_packages.join(" ")
 
   # Provision Laravel
   # config.vm.provision "shell", path: "#{github_url}/scripts/laravel.sh", privileged: false, args: [server_ip, laravel_root_folder, public_folder, laravel_version]
